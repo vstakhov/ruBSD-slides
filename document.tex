@@ -1,5 +1,11 @@
-\documentclass{beamer}
-
+\documentclass[12pt,t]{beamer}
+\usetheme{default}
+\beamertemplatenavigationsymbolsempty
+\hypersetup{pdfpagemode=UseNone} % don't show bookmarks on initial view
+\usefonttheme{professionalfonts}
+\usefonttheme{serif}
+\usepackage{fontspec}
+\setmainfont{Liberation Sans}
 \usepackage{url}
 \usepackage[english]{babel}
 \usepackage{verbatim}
@@ -10,17 +16,36 @@
 \usepackage{listings}
 \usepackage{mathtools}
 \usepackage{color}
+\usepackage{minted}
 \usepackage{tikz}
 \usepackage[underline=false]{pgf-umlsd}
 \usetikzlibrary{positioning, fit, calc, shapes, arrows, shadows}
 \usepgflibrary{arrows}
 
-\mode<presentation>
-{
-  \definecolor{beamer@gker}{rgb}{0.8,0.0,0.0}
-  \setbeamercolor*{structure}{fg=beamer@gker}
-  \logo{\includegraphics[scale=0.5]{logo.pdf}}
-}
+%\definecolor{fore}{RGB}{249,242,215}
+%\definecolor{back}{RGB}{51,51,51}
+%\definecolor{title}{RGB}{200,0,90}
+%\setbeamercolor{titlelike}{fg=title}
+%\setbeamercolor{normal text}{fg=fore,bg=back}
+
+%\definecolor{foreground}{RGB}{255,255,255}
+%\definecolor{background}{RGB}{24,24,24}
+%\definecolor{title}{RGB}{107,174,214}
+%\definecolor{gray}{RGB}{155,155,155}
+%\definecolor{subtitle}{RGB}{102,255,204}
+%\definecolor{hilight}{RGB}{102,255,204}
+%\definecolor{vhilight}{RGB}{255,111,207}
+%\setbeamercolor{titlelike}{fg=title}
+%\setbeamercolor{subtitle}{fg=subtitle}
+%\setbeamercolor{institute}{fg=gray}
+%\setbeamercolor{normal text}{fg=foreground,bg=background}
+%\setbeamercolor{item}{fg=foreground} % color of bullets
+\definecolor{lightgray}{gray}{0.80}
+%\setbeamercolor{subitem}{fg=lightgray}
+%\setbeamercolor{itemize/enumerate subbody}{fg=lightgray}
+%\setbeamertemplate{itemize subitem}{{\textendash}}
+%\setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}
+%\setbeamerfont{itemize/enumerate subitem}{size=\footnotesize}
 
 \setbeamertemplate{footline}[text line]{%
   \parbox{\linewidth}{\vspace*{-8pt}
@@ -29,8 +54,6 @@
   \hfill
   \insertframenumber\ of \inserttotalframenumber}}
 \setbeamertemplate{navigation symbols}{}
-
-\definecolor{light-gray}{gray}{0.60}
 
 \title{abc}
 %\author{Vsevolod Stakhov \\ \url{vsevolod@FreeBSD.org}}
@@ -133,6 +156,33 @@ Pre-historic ages: Core2 quad (SSE3):
 	\end{itemize}
 \end{frame}
 
+\begin{frame}
+\frametitle{How expensive is encryption nowadays}
+\framesubtitle{Algorithm performance} 
+ChaCha20:
+%XXX: picture here
+\end{frame}
+
+\begin{frame}
+\frametitle{How expensive is encryption nowadays}
+\framesubtitle{Algorithm performance} 
+Advantages of chacha20:
+\begin{itemize}
+\item clear and simple design
+\item 512 bits of block size (up to $2^{70}$ bytes before rekeying)
+\item fit very well for vectorized operations (and especially for AVX512)
+\end{itemize}
+Current usage of chacha20:
+\begin{itemize}
+\item openssh
+\item libressl and boringssl
+\item libottery fast pseudo-random generator
+\item OpenBSD \texttt{arc4random}
+\item Chrome browser
+\item proposed IETF standard for TLS and IPSEC
+\end{itemize}
+\end{frame}
+
 \begin{frame}[fragile]
 \frametitle{How expensive is encryption nowadays}
 Protocols performance:
@@ -142,7 +192,7 @@ Protocols performance:
 \newthread{c}{Client}
 \newinst[3]{s}{Server}
 \bloodymess{c}{}{s}{R}{ClientHello}{}
-\begin{sdblock}[green!20]{Certificates}{}
+\begin{sdblock}[gray!20]{Certificates}{}
 \bloodymess{s}{CertificatesChain}{c}{L}{}{}
 \end{sdblock}
 \bloodymess{c}{ClientKeyExchange}{s}{R}{CertificateVerify}{}
@@ -150,17 +200,6 @@ Protocols performance:
 \end{sequencediagram}
 \caption{TLS connection establishment}
 \end{figure}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{How expensive is encryption nowadays}
-TLS latency improvements:
-\begin{itemize}
-\item Shorter certificates chain
-\item Elliptic curve certificates and key exchange (ECDHE)
-\item 
-\includegraphics[height=0.2\textheight]{ec.png}
-\end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -171,6 +210,115 @@ TLS latency improvements:
 	\item<3-> Fast crypto in kernel (FreeBSD-HEAD by jmg@)
 	\item<4-> But initial latency for secure connections is still high.
 \end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Building secure systems}
+General problems when building secure systems:
+\begin{itemize}
+\item<1-> Curse of backward compatibility
+\item<2-> Complex and inconsistent API (OpenSSL)
+\item<3-> Bad default settings
+\item<3-> Permit everything by default
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Building secure systems}
+\framesubtitle{Backward compatibility}
+\begin{itemize}
+\item<1-> Protocols design flaws
+\item<2-> Poor algorithmic choices:
+	\begin{itemize}
+	\item Reduce security
+	\item Remove important properties, e.g. forward secrecy property
+	\item Can be very slow (3DES) and hence lead to computational DoS
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Building secure systems}
+\framesubtitle{Design flaws example: TLS}
+Encrypt and MAC choice.
+%XXX demonstrate
+\begin{itemize}
+\item Sensitive to side attacks (PaddingOracle, LuckyThirteen)
+\item Inefficient computation
+\item No integrity on ciphertext
+\item No protection against the attacks to a cipher itself
+\end{itemize}
+Proposed: encrypt-then-mac extension in RFC7366.
+\end{frame}
+
+\begin{frame}
+\frametitle{Building secure systems}
+\framesubtitle{Design flaws example: TLS}
+CBC mode.
+\begin{itemize}
+\item Assumes that cipher is secure for all data even if it is controlled by an attacker
+\item Decryption differs from encryption
+\item Cannot be computed in parallel
+\item Need padding (Poodle attack)
+\end{itemize}
+Proposed: use ciphers in counter mode only (not compatible with old browsers)
+\end{frame}
+
+\begin{frame}
+\frametitle{Building secure systems}
+\framesubtitle{TLS compatibility in the real life}
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{compat.png}
+\caption{`Secure' TLS compatibility}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Building secure systems}
+\framesubtitle{API design flaws}
+\begin{itemize}
+\item<1-> all software contain mistakes
+\item<2-> complicated API increases chance of mistakes some of them are security 
+vulnerabilities
+\item<3-> inconsistent API provokes misusage
+\item<4-> always prefer simple and widely used libraries
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Building secure systems}
+\framesubtitle{API design flaws: OpenSSL}
+Certificates verification.
+%XXX add slide
+\end{frame}
+
+\begin{frame}
+\frametitle{Building secure systems}
+\framesubtitle{API design flaws: OpenSSL}
+Macro based API.
+%XXX add slide
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Building secure systems}
+\framesubtitle{API design flaws: some practical advices}
+Higher level libraries:
+\begin{itemize}
+\item libtls from OpenBSD (formely ressl):
+\begin{tiny}
+\begin{minted}{c}
+#include <tls.h>
+
+struct tls *tls_client(void);
+int tls_connect(struct tls *ctx, const char *host, const char *port);
+int tls_read(struct tls *ctx, void *buf, size_t buflen, size_t *outlen);
+int tls_write(struct tls *ctx, const void *buf, size_t buflen, size_t *outlen);
+int tls_close(struct tls *ctx);
+\end{minted}
+\end{tiny}
+\item libsodium (not for TLS)
+\end{itemize}
+Be very careful about trust relationships.
 \end{frame}
 
 \end{document}
