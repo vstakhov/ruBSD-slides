@@ -11,8 +11,8 @@
 \usepackage{verbatim}
 %\usepackage{times}
 \usepackage{graphicx}
-\usepackage[utf8x]{inputenc}
-\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+%\usepackage[T1]{fontenc}
 \usepackage{listings}
 \usepackage{mathtools}
 \usepackage{color}
@@ -21,31 +21,31 @@
 \usepackage[underline=false]{pgf-umlsd}
 \usetikzlibrary{positioning, fit, calc, shapes, arrows, shadows}
 \usepgflibrary{arrows}
+\definecolor{lightgray}{gray}{0.70}
 
-%\definecolor{fore}{RGB}{249,242,215}
-%\definecolor{back}{RGB}{51,51,51}
-%\definecolor{title}{RGB}{200,0,90}
-%\setbeamercolor{titlelike}{fg=title}
-%\setbeamercolor{normal text}{fg=fore,bg=back}
+\definecolor{fore}{RGB}{249,242,215}
+\definecolor{back}{RGB}{51,51,51}
+\definecolor{title}{RGB}{200,0,90}
+\setbeamercolor{titlelike}{fg=title}
+\setbeamercolor{normal text}{fg=fore,bg=back}
 
-%\definecolor{foreground}{RGB}{255,255,255}
-%\definecolor{background}{RGB}{24,24,24}
-%\definecolor{title}{RGB}{107,174,214}
-%\definecolor{gray}{RGB}{155,155,155}
-%\definecolor{subtitle}{RGB}{102,255,204}
-%\definecolor{hilight}{RGB}{102,255,204}
-%\definecolor{vhilight}{RGB}{255,111,207}
-%\setbeamercolor{titlelike}{fg=title}
-%\setbeamercolor{subtitle}{fg=subtitle}
-%\setbeamercolor{institute}{fg=gray}
-%\setbeamercolor{normal text}{fg=foreground,bg=background}
-%\setbeamercolor{item}{fg=foreground} % color of bullets
-\definecolor{lightgray}{gray}{0.80}
-%\setbeamercolor{subitem}{fg=lightgray}
-%\setbeamercolor{itemize/enumerate subbody}{fg=lightgray}
-%\setbeamertemplate{itemize subitem}{{\textendash}}
-%\setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}
-%\setbeamerfont{itemize/enumerate subitem}{size=\footnotesize}
+\definecolor{foreground}{RGB}{255,255,255}
+\definecolor{background}{RGB}{24,24,24}
+\definecolor{title}{RGB}{107,174,214}
+\definecolor{gray}{RGB}{155,155,155}
+\definecolor{subtitle}{RGB}{102,255,204}
+\definecolor{hilight}{RGB}{102,255,204}
+\definecolor{vhilight}{RGB}{255,111,207}
+\setbeamercolor{titlelike}{fg=title}
+\setbeamercolor{subtitle}{fg=subtitle}
+\setbeamercolor{institute}{fg=gray}
+\setbeamercolor{normal text}{fg=foreground,bg=background}
+\setbeamercolor{item}{fg=foreground} % color of bullets
+\setbeamercolor{subitem}{fg=lightgray}
+\setbeamercolor{itemize/enumerate subbody}{fg=lightgray}
+\setbeamertemplate{itemize subitem}{{\textendash}}
+\setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}
+\setbeamerfont{itemize/enumerate subitem}{size=\footnotesize}
 
 \setbeamertemplate{footline}[text line]{%
   \parbox{\linewidth}{\vspace*{-8pt}
@@ -56,7 +56,7 @@
 \setbeamertemplate{navigation symbols}{}
 
 \title{abc}
-%\author{Vsevolod Stakhov \\ \url{vsevolod@FreeBSD.org}}
+\author{Vsevolod Stakhov \\ \url{vsevolod@FreeBSD.org}}
 \institute{\includegraphics[scale=0.5]{logo.pdf}}
 
 \newcommand{\bloodymess}[7][0]{
@@ -268,7 +268,7 @@ Proposed: use ciphers in counter mode only (not compatible with old browsers)
 \frametitle{Building secure systems}
 \framesubtitle{TLS compatibility in the real life}
 \begin{figure}[H]
-\includegraphics[width=\textwidth]{compat.png}
+%\includegraphics[width=\textwidth]{compat.png}
 \caption{`Secure' TLS compatibility}
 \end{figure}
 \end{frame}
