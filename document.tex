@@ -5,7 +5,8 @@
 \usefonttheme{professionalfonts}
 \usefonttheme{serif}
 \usepackage{fontspec}
-\setmainfont{Liberation Sans}
+\setmainfont{FreeSerif}
+\setmonofont{FreeMono}
 \usepackage{url}
 \usepackage[english]{babel}
 \usepackage{verbatim}
@@ -17,6 +18,7 @@
 \usepackage{mathtools}
 \usepackage{color}
 \usepackage{minted}
+\usemintedstyle{vim}
 \usepackage{tikz}
 \usepackage[underline=false]{pgf-umlsd}
 \usetikzlibrary{positioning, fit, calc, shapes, arrows, shadows}
@@ -46,7 +48,12 @@
 \setbeamertemplate{itemize subitem}{{\textendash}}
 \setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}
 \setbeamerfont{itemize/enumerate subitem}{size=\footnotesize}
-
+\newcommand{\funcname}[1]{
+	{\color{yellow!30} #1}
+}
+\newcommand{\cipher}[1]{
+	{\color{blue!30} #1}
+}
 \setbeamertemplate{footline}[text line]{%
   \parbox{\linewidth}{\vspace*{-8pt}
   \hfill
@@ -98,7 +105,7 @@
   \item<2-> New algorithms:
   \begin{itemize}
     \item optimized chaining mode (e.g. CTR instead of CBC)
-    \item optimized algorithms (from 3DES to ChaCha20)
+    \item optimized algorithms (from \cipher{3DES} to \cipher{ChaCha20})
   \end{itemize}
   \item<3-> New protocols
 \end{itemize}
@@ -147,7 +154,7 @@ Pre-historic ages: Core2 quad (SSE3):
 \begin{frame}
 \frametitle{How expensive is encryption nowadays}
 \framesubtitle{Algorithm performance} 
-3DES:
+\cipher{3DES}:
 	\begin{itemize}
 	\item very small block size (64 bits)
 	\item need to rekey after 32 GB data
@@ -159,25 +166,52 @@ Pre-historic ages: Core2 quad (SSE3):
 \begin{frame}
 \frametitle{How expensive is encryption nowadays}
 \framesubtitle{Algorithm performance} 
-ChaCha20:
+\cipher{ChaCha20}:
 %XXX: picture here
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{How expensive is encryption nowadays}
+\framesubtitle{Algorithm performance} 
+\cipher{ChaCha20} round:
+\begin{tiny}
+\begin{minted}{c}
+void qr(a,b,c,d) {
+    a += b; d ^= a; d <<<= 16;
+    c += d; b ^= c; b <<<= 12;
+    a += b; d ^= a; d <<<= 8;
+    c += d; b ^= c; b <<<= 7;
+}
+
+for (i = chacha_rounds;i > 0;i -= 2) {
+    qr(x0, x4, x8,x12)
+    qr(x1, x5, x9,x13)
+    qr(x2, x6,x10,x14)
+    qr(x3, x7,x11,x15)
+    qr(x0, x5,x10,x15)
+    qr(x1, x6,x11,x12)
+    qr(x2, x7, x8,x13)
+    qr(x3, x4, x9,x14)
+}
+\end{minted}
+\end{tiny}
 \end{frame}
 
 \begin{frame}
 \frametitle{How expensive is encryption nowadays}
 \framesubtitle{Algorithm performance} 
-Advantages of chacha20:
+Advantages of \cipher{ChaCha20}:
 \begin{itemize}
 \item clear and simple design
 \item 512 bits of block size (up to $2^{70}$ bytes before rekeying)
 \item fit very well for vectorized operations (and especially for AVX512)
 \end{itemize}
-Current usage of chacha20:
+Current usage of \cipher{ChaCha20-Poly1305}:
 \begin{itemize}
 \item openssh
 \item libressl and boringssl
 \item libottery fast pseudo-random generator
-\item OpenBSD \texttt{arc4random}
+\item OpenBSD \funcname{arc4random}
 \item Chrome browser
 \item proposed IETF standard for TLS and IPSEC
 \end{itemize}
@@ -205,10 +239,12 @@ Protocols performance:
 \begin{frame}
 \frametitle{Performance: summary}
 \begin{itemize}
-	\item<1-> Why use plaintext protocols?
-	\item<2-> Why use old algorithms?
-	\item<3-> Fast crypto in kernel (FreeBSD-HEAD by jmg@)
-	\item<4-> But initial latency for secure connections is still high.
+\item<1-> Experimental support of \cipher{AES-GCM} in OpenBSD and FreeBSD (by John-Mark 
+Gurney), 
+problems with FPU locking
+\item<2-> Support of \cipher{ChaCha20-Poly1305} in libressl, boringssl and libgrypt (and 
+gnutls)
+\item<3-> Deprecating of \cipher{RC4} in OpenBSD (proposed in FreeBSD as well)
 \end{itemize}
 \end{frame}
 
@@ -232,7 +268,7 @@ General problems when building secure systems:
 	\begin{itemize}
 	\item Reduce security
 	\item Remove important properties, e.g. forward secrecy property
-	\item Can be very slow (3DES) and hence lead to computational DoS
+	\item Can be very slow (\cipher{3DES}) and hence lead to computational DoS
 	\end{itemize}
 \end{itemize}
 \end{frame}
@@ -285,18 +321,53 @@ vulnerabilities
 \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Building secure systems}
 \framesubtitle{API design flaws: OpenSSL}
 Certificates verification.
-%XXX add slide
+\begin{itemize}
+\item Terribly complicated - just look at the documentation of 
+\funcname{SSL\_set\_verify} and auxiliary function \funcname{SSL\_set\_ex\_data}:
+\begin{tiny}
+\begin{minted}{c}
+ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
+mydata = SSL_get_ex_data(ssl, mydata_index);
+\end{minted}
+\end{tiny}
+\item You need to check certificate issuers manually (not even covered in the example in 
+the manual page)
+\item You need manually check all extensions such as SNI or ALPN (and many openssl users 
+fail to do it correctly)
+\end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Building secure systems}
 \framesubtitle{API design flaws: OpenSSL}
 Macro based API.
-%XXX add slide
+\begin{itemize}
+\item Inconsistent: 
+\begin{enumerate}
+\item Many ways to do the same thing, for example \textbf{EVP} and legacy and obsoleted 
+interfaces: \funcname{EVP\_PKEY\_encrypt} and \funcname{RSA\_public\_encrypt}.
+\item Confusing names \funcname{PEM\_read\_RSAPublicKey}, 
+\funcname{PEM\_read\_RSA\_PUBKEY} 
+and \funcname{PEM\_read\_PUBKEY}
+\end{enumerate}
+\item Dangerous pointers API:
+\begin{tiny}
+\begin{minted}{c}
+unsigned char *sk, *p;
+size_t sklen;
+
+sklen = i2d_ECPrivateKey(ec_key, NULL);
+sk = malloc(sklen);
+p = sk;
+i2d_ECPrivateKey(ec_key, &p);
+/* p is now at the end of sk */
+\end{minted}
+\end{tiny}
+\end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -317,6 +388,11 @@ int tls_close(struct tls *ctx);
 \end{minted}
 \end{tiny}
 \item libsodium (not for TLS)
+\begin{tiny}
+\begin{minted}{c}
+
+\end{minted}
+\end{tiny}
 \end{itemize}
 Be very careful about trust relationships.
 \end{frame}
