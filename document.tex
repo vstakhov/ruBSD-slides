@@ -195,6 +195,12 @@ for (i = chacha_rounds;i > 0;i -= 2) {
 }
 \end{minted}
 \end{tiny}
+\begin{itemize}
+\item<2-> Each round modifies the whole block
+\item<2-> Each quarter round operation is independent from others in the round
+\item<2-> Efficient diagonal optimizations for SSE/AVX/AVX512
+\item<2-> Need even number of rounds (20 or 12 typically)
+\end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -275,6 +281,20 @@ General problems when building secure systems:
 
 \begin{frame}
 \frametitle{Building secure systems}
+\framesubtitle{Backward compatibility}
+Practical example - LibreSSL replacement of OpenSSL
+\begin{itemize}
+\item Legacy API - \cipher{DES} support in OpenLDAP
+\item Invalid random number generators - \funcname{RAND\_egd} which is valid merely for Linux (Python, Curl, Wget and many other ports)
+\item SSL3 and even SSL2 support (Curl)
+\item Unnecessary engine functions (many ports, including apache) 
+\end{itemize}
+
+Practically \textbf{all} the issues listed are also valid for the upcoming 1.0.2 branch.
+\end{frame}
+
+\begin{frame}
+\frametitle{Building secure systems}
 \framesubtitle{Design flaws example: TLS}
 Encrypt and MAC choice.
 %XXX demonstrate
@@ -295,7 +315,7 @@ CBC mode.
 \item Assumes that cipher is secure for all data even if it is controlled by an attacker
 \item Decryption differs from encryption
 \item Cannot be computed in parallel
-\item Need padding (Poodle attack)
+\item Needs careful padding (Poodle attack)
 \end{itemize}
 Proposed: use ciphers in counter mode only (not compatible with old browsers)
 \end{frame}
@@ -334,7 +354,7 @@ ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
 mydata = SSL_get_ex_data(ssl, mydata_index);
 \end{minted}
 \end{tiny}
-\item You need to check certificate issuers manually (not even covered in the example in 
+\item You need to check certificate CN manually (not even covered in the example in 
 the manual page)
 \item You need manually check all extensions such as SNI or ALPN (and many openssl users 
 fail to do it correctly)
