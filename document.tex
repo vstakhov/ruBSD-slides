@@ -167,7 +167,9 @@ Pre-historic ages: Core2 quad (SSE3):
 \frametitle{How expensive is encryption nowadays}
 \framesubtitle{Algorithm performance} 
 \cipher{ChaCha20}:
-%XXX: picture here
+\begin{figure}[H]
+\includegraphics[height=0.7\textheight]{chacha.pdf}
+\end{figure}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -228,16 +230,7 @@ Current usage of \cipher{ChaCha20-Poly1305}:
 Protocols performance:
 \begin{figure}[H]
 \centering
-\begin{sequencediagram}
-\newthread{c}{Client}
-\newinst[3]{s}{Server}
-\bloodymess{c}{}{s}{R}{ClientHello}{}
-\begin{sdblock}[gray!20]{Certificates}{}
-\bloodymess{s}{CertificatesChain}{c}{L}{}{}
-\end{sdblock}
-\bloodymess{c}{ClientKeyExchange}{s}{R}{CertificateVerify}{}
-\bloodymess{s}{}{c}{L}{ChangeCipher}{}
-\end{sequencediagram}
+\includegraphics[height=0.6\textheight]{tls.pdf}
 \caption{TLS connection establishment}
 \end{figure}
 \end{frame}
@@ -307,10 +300,17 @@ Encrypt and MAC choice.
 Proposed: encrypt-then-mac extension in RFC7366.
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Building secure systems}
+\framesubtitle{CBC mode}
+\begin{figure}[H]
+\includegraphics[height=0.85\textheight]{cbc.pdf}
+\end{figure}
+\end{frame}
+
 \begin{frame}
 \frametitle{Building secure systems}
-\framesubtitle{Design flaws example: TLS}
-CBC mode.
+\framesubtitle{CBC mode}
 \begin{itemize}
 \item Assumes that cipher is secure for all data even if it is controlled by an attacker
 \item Decryption differs from encryption
@@ -318,6 +318,25 @@ CBC mode.
 \item Needs careful padding (Poodle attack)
 \end{itemize}
 Proposed: use ciphers in counter mode only (not compatible with old browsers)
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Building secure systems}
+\framesubtitle{Counter mode}
+\begin{figure}[H]
+\includegraphics[height=0.85\textheight]{ctr.pdf}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Building secure systems}
+\framesubtitle{Counter mode}
+\begin{itemize}
+\item Ciphers accepts only deterministic counter input
+\item Decryption is equal to encryption
+\item Can be computed in parallel
+\item Need to ensure that the counter never ever repeats
+\end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -407,14 +426,33 @@ int tls_write(struct tls *ctx, const void *buf, size_t buflen, size_t *outlen);
 int tls_close(struct tls *ctx);
 \end{minted}
 \end{tiny}
-\item libsodium (not for TLS)
+\item libsodium (for generic encryption/signing)
 \begin{tiny}
 \begin{minted}{c}
+/* Encrypt */
+memset(out, '\0', crypto_box_ZEROBYTES);
+memcpy(out + crypto_box_ZEROBYTES, plain, length);
+rc = crypto_box(enc, out, crypto_box_ZEROBYTES + length, nonce, pk, sk);
 
+/* Decrypt */
+memset(in, '\0', crypto_box_BOXZEROBYTES);
+memcpy(in + crypto_box_BOXZEROBYTES, enc, length);
+rc = crypto_box_open(plain, in, crypto_box_BOXZEROBYTES + length, nonce, pk, sk);
+if (rc != 0) /* Verification error */
 \end{minted}
 \end{tiny}
 \end{itemize}
-Be very careful about trust relationships.
+\end{frame}
+
+\begin{frame}
+\frametitle{Building secure systems}
+\framesubtitle{Insecure default settings}
+\begin{itemize}
+\item Enable all possible extensions even if they are not used (Heartbleed)
+\item Be compatible with old and broken systems, notably Windows XP (SSL Poodle)
+\item Prefer client settings
+\item Too many sources of trust
+\end{itemize}
 \end{frame}
 
 \end{document}
