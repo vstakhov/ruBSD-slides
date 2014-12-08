@@ -1,12 +1,12 @@
-\documentclass[12pt,t]{beamer}
+\documentclass[11pt,t]{beamer}
 \usetheme{default}
 \beamertemplatenavigationsymbolsempty
 \hypersetup{pdfpagemode=UseNone} % don't show bookmarks on initial view
 \usefonttheme{professionalfonts}
 \usefonttheme{serif}
 \usepackage{fontspec}
-\setmainfont{FreeSerif}
-\setmonofont{FreeMono}
+\setmainfont{Ubuntu}
+\setmonofont{Ubuntu Mono}
 \usepackage{url}
 \usepackage[english]{babel}
 \usepackage{verbatim}
@@ -54,6 +54,7 @@
 \newcommand{\cipher}[1]{
 	{\color{blue!30} #1}
 }
+\renewcommand*{\thefootnote}{\fnsymbol{footnote}}
 \setbeamertemplate{footline}[text line]{%
   \parbox{\linewidth}{\vspace*{-8pt}
   \hfill
@@ -62,9 +63,9 @@
   \insertframenumber\ of \inserttotalframenumber}}
 \setbeamertemplate{navigation symbols}{}
 
-\title{abc}
+\title{Cryptography and secure\footnotemark[1] systems \\\vspace{0.5cm} \footnotemark[1] 
+{\small in the real world}}
 \author{Vsevolod Stakhov \\ \url{vsevolod@FreeBSD.org}}
-\institute{\includegraphics[scale=0.5]{logo.pdf}}
 
 \newcommand{\bloodymess}[7][0]{
   \stepcounter{seqlevel}
@@ -212,7 +213,7 @@ Advantages of \cipher{ChaCha20}:
 \begin{itemize}
 \item clear and simple design
 \item 512 bits of block size (up to $2^{70}$ bytes before rekeying)
-\item fit very well for vectorized operations (and especially for AVX512)
+\item fit very well for vectorized operations (and especially for AVX)
 \end{itemize}
 Current usage of \cipher{ChaCha20-Poly1305}:
 \begin{itemize}
@@ -236,7 +237,7 @@ Protocols performance:
 \end{frame}
 
 \begin{frame}
-\frametitle{Performance: summary}
+\frametitle{Performance: current progress}
 \begin{itemize}
 \item<1-> Experimental support of \cipher{AES-GCM} in OpenBSD and FreeBSD (by John-Mark 
 Gurney), 
@@ -283,7 +284,8 @@ Practical example - LibreSSL replacement of OpenSSL
 \item Unnecessary engine functions (many ports, including apache) 
 \end{itemize}
 
-Practically \textbf{all} the issues listed are also valid for the upcoming 1.0.2 branch.
+Practically \textit{all} the issues listed are also valid for the upcoming OpenSSL 1.0.2 
+branch.
 \end{frame}
 
 \begin{frame}
@@ -337,15 +339,6 @@ Proposed: use ciphers in counter mode only (not compatible with old browsers)
 \item Can be computed in parallel
 \item Need to ensure that the counter never ever repeats
 \end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Building secure systems}
-\framesubtitle{TLS compatibility in the real life}
-\begin{figure}[H]
-%\includegraphics[width=\textwidth]{compat.png}
-\caption{`Secure' TLS compatibility}
-\end{figure}
 \end{frame}
 
 \begin{frame}
@@ -453,6 +446,55 @@ if (rc != 0) /* Verification error */
 \item Prefer client settings
 \item Too many sources of trust
 \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Building secure systems}
+\framesubtitle{Secure defaults: basics}
+\begin{itemize}
+\item Explicitly set order and disable weak ciphersuites:
+	\begin{itemize}
+	\item Disable SSLv3 if possible (or enable \funcname{TLS\_FALLBACK\_SCSV} in both 
+	client and server)
+	\item Always prefer key exchange with ephemeral keys
+	\item Disable 3DES to avoid computational DoS
+	\item Prefer strong cipher suites, e.g. 
+	{\tiny 
+	\begin{verbatim}EECDH+ECDSA+CHACHA20-POLY1305:EECDH+ECDSA+AESGCM\end{verbatim}
+	}
+	\end{itemize}
+\item Set sane expiration for keys
+\item Use elliptic curve cryptography (if possible)
+\item Be very careful when choosing entropy source: e.g. prefer \funcname{getentropy(2)} 
+call in OpenBSD to \texttt{/dev/random} especially with sandboxing or containers
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Building secure systems}
+\framesubtitle{Secure defaults: advanced topics}
+Some additional modern technologies to build secure systems.
+\begin{itemize}
+\item DANE/DNSSEC allows to move from CA and PKI trust relationships to DNS trust
+\begin{itemize}
+\item DNSSEC requires recursion being used for all DNS clients
+\item Has some risk of replay based attacks (especially in clouds)
+\item Increases the risk of DNS amplification attacks (can be mitigated by rate-limits)
+\item Implies ECC if you want to store the whole certificate in DNS (for speed)
+\item Requires additional DNS requests
+\item Can be filtered by middleboxes
+\item Still fragile if your 1-st level zone provider is not trusted
+\end{itemize}
+\item Use opportunistic transport layer encryption: tcpcrypt
+\item Use type safe TLS libraries: ocaml-tls, mitls
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\vfill\vfill\centering
+\emph{Questions?} \\[4pt]
+\url{vsevolod@FreeBSD.org}
+\vfill\vfill
 \end{frame}
 
 \end{document}
