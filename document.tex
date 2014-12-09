@@ -240,11 +240,10 @@ Protocols performance:
 \frametitle{Performance: current progress}
 \begin{itemize}
 \item<1-> Experimental support of \cipher{AES-GCM} in OpenBSD and FreeBSD (by John-Mark 
-Gurney), 
-problems with FPU locking
+Gurney), problems with additional registers saving on context switch
 \item<2-> Support of \cipher{ChaCha20-Poly1305} in libressl, boringssl and libgrypt (and 
 gnutls)
-\item<3-> Deprecating of \cipher{RC4} in OpenBSD (proposed in FreeBSD as well)
+\item<3-> Deprecating of \cipher{RC4} in OpenBSD (proposed in FreeBSD and NetBSD as well)
 \end{itemize}
 \end{frame}
 
@@ -296,7 +295,7 @@ Encrypt and MAC choice.
 \begin{itemize}
 \item Sensitive to side attacks (PaddingOracle, LuckyThirteen)
 \item Inefficient computation
-\item No integrity on ciphertext
+\item No integrity on ciphertext (can be dangerous if used with malleable ciphers)
 \item No protection against the attacks to a cipher itself
 \end{itemize}
 Proposed: encrypt-then-mac extension in RFC7366.
@@ -349,7 +348,8 @@ Proposed: use ciphers in counter mode only (not compatible with old browsers)
 \item<2-> complicated API increases chance of mistakes some of them are security 
 vulnerabilities
 \item<3-> inconsistent API provokes misusage
-\item<4-> always prefer simple and widely used libraries
+\item<4-> always prefer simple and widely used libraries (meaning \textbf{do not 
+implement your own cryptographic library})
 \end{itemize}
 \end{frame}
 
@@ -437,6 +437,16 @@ if (rc != 0) /* Verification error */
 \end{itemize}
 \end{frame}
 
+%\begin{frame}[fragile]
+%\frametitle{Building secure systems}
+%\framesubtitle{API design flaws: additional materials}
+%\begin{enumerate}
+%\item `The most dangerous code in the world: validating SSL certificates in non-browser 
+%software' by Georgiev, Boneh, Shmatikov et al.
+%\item `Lucky Thirteen: Breaking the TLS and DTLS Record Protocols': 
+%\end{enumerate}
+%\end{frame}
+
 \begin{frame}
 \frametitle{Building secure systems}
 \framesubtitle{Insecure default settings}
@@ -459,8 +469,8 @@ if (rc != 0) /* Verification error */
 	\item Always prefer key exchange with ephemeral keys
 	\item Disable 3DES to avoid computational DoS
 	\item Prefer strong cipher suites, e.g. 
-	{\tiny 
-	\begin{verbatim}EECDH+ECDSA+CHACHA20-POLY1305:EECDH+ECDSA+AESGCM\end{verbatim}
+	{\scriptsize 
+	\texttt{\cipher{EECDH+ECDSA+CHACHA20-POLY1305:EECDH+ECDSA+AESGCM}}
 	}
 	\end{itemize}
 \item Set sane expiration for keys
@@ -472,7 +482,7 @@ call in OpenBSD to \texttt{/dev/random} especially with sandboxing or containers
 
 \begin{frame}[fragile]
 \frametitle{Building secure systems}
-\framesubtitle{Secure defaults: advanced topics}
+\framesubtitle{Advanced topics}
 Some additional modern technologies to build secure systems.
 \begin{itemize}
 \item DANE/DNSSEC allows to move from CA and PKI trust relationships to DNS trust
@@ -487,6 +497,44 @@ Some additional modern technologies to build secure systems.
 \end{itemize}
 \item Use opportunistic transport layer encryption: tcpcrypt
 \item Use type safe TLS libraries: ocaml-tls, mitls
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Building secure systems}
+\framesubtitle{Advanced topics: DNS security}
+DNSCurve: complete DNS traffic encryption
+\begin{itemize}
+\item Encrypts and authorize all traffic between client and authoritative server
+\item Breaks all intermediate caches if enabled
+\item Requires global deployment
+\end{itemize}
+DNSCrypt: encrypt the last mile of DNS exchange
+\begin{itemize}
+\item Encrypts and protects all communications between client and recursor
+\item Can be used with DNSSEC
+\item Can be used even without explicit authorization but still protects from passive 
+snooping (e.g. in open wireless networks)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Building secure systems}
+\framesubtitle{Advanced topics: Transport encryption}
+tcpcrypt - transport layer encryption (MAC is added for each packet as TCP option)
+\begin{itemize}
+\item Opportunistically encrypts all TCP connection invisible for applications
+\item Compatible\footnote{almost} with middleboxes in the Internet
+\item Requires zero setup and establish encrypted connections automatically
+\item Faster than SSL
+\end{itemize}
+Disadvantages:
+\begin{itemize}
+\item No authority checks (can be done via DANE however)
+\item Not supported by the most of TCP stacks (experimental linux kernel support and 
+divert socket concept version)
+\item Increases TCP handshake duration to 4 RTT
+\item Incompatible with TSO
 \end{itemize}
 \end{frame}
 
