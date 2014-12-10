@@ -239,11 +239,11 @@ Protocols performance:
 \begin{frame}
 \frametitle{Performance: current progress}
 \begin{itemize}
-\item<1-> Experimental support of \cipher{AES-GCM} in OpenBSD and FreeBSD (by John-Mark 
-Gurney), problems with additional registers saving on context switch
+\item<1-> Experimental support of \cipher{AES-GCM} in OpenBSD and FreeBSD\footnote{by John-Mark 
+Gurney} kernels, problems with additional registers saving on context switch
 \item<2-> Support of \cipher{ChaCha20-Poly1305} in libressl, boringssl and libgrypt (and 
 gnutls)
-\item<3-> Deprecating of \cipher{RC4} in OpenBSD (proposed in FreeBSD and NetBSD as well)
+\item<3-> Deprecating of \cipher{RC4} in OpenBSD (proposed in FreeBSD and NetBSD as well) and switching to ChaCha20 for \funcname{arc4random}
 \end{itemize}
 \end{frame}
 
