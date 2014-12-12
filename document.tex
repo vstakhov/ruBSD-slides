@@ -154,13 +154,13 @@ Pre-historic ages: Core2 quad (SSE3):
 
 \begin{frame}
 \frametitle{How expensive is encryption nowadays}
-\framesubtitle{Algorithm performance} 
-\cipher{3DES}:
+\framesubtitle{Algorithm performance}
+Important properties:
 	\begin{itemize}
-	\item very small block size (64 bits)
-	\item need to rekey after 32 GB data
-	\item need some additional MAC algorithm
-	\item terribly slow
+	\item rekeying interval
+	\item hardware vs software oriented algorithms
+	\item constant time implementation
+	\item space required (mostly significant for embedded systems)
 	\end{itemize}
 \end{frame}
 
@@ -237,17 +237,6 @@ Protocols performance:
 \end{frame}
 
 \begin{frame}
-\frametitle{Performance: current progress}
-\begin{itemize}
-\item<1-> Experimental support of \cipher{AES-GCM} in OpenBSD and FreeBSD\footnote{by John-Mark 
-Gurney} kernels, problems with additional registers saving on context switch
-\item<2-> Support of \cipher{ChaCha20-Poly1305} in libressl, boringssl and libgrypt (and 
-gnutls)
-\item<3-> Deprecating of \cipher{RC4} in OpenBSD (proposed in FreeBSD and NetBSD as well) and switching to ChaCha20 for \funcname{arc4random}
-\end{itemize}
-\end{frame}
-
-\begin{frame}
 \frametitle{Building secure systems}
 General problems when building secure systems:
 \begin{itemize}
@@ -255,20 +244,6 @@ General problems when building secure systems:
 \item<2-> Complex and inconsistent API (OpenSSL)
 \item<3-> Bad default settings
 \item<3-> Permit everything by default
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Building secure systems}
-\framesubtitle{Backward compatibility}
-\begin{itemize}
-\item<1-> Protocols design flaws
-\item<2-> Poor algorithmic choices:
-	\begin{itemize}
-	\item Reduce security
-	\item Remove important properties, e.g. forward secrecy property
-	\item Can be very slow (\cipher{3DES}) and hence lead to computational DoS
-	\end{itemize}
 \end{itemize}
 \end{frame}
 
@@ -285,6 +260,20 @@ Practical example - LibreSSL replacement of OpenSSL
 
 Practically \textit{all} the issues listed are also valid for the upcoming OpenSSL 1.0.2 
 branch.
+\end{frame}
+
+\begin{frame}
+\frametitle{Building secure systems}
+\framesubtitle{Backward compatibility}
+\begin{itemize}
+\item<1-> Protocols design flaws
+\item<2-> Poor algorithmic choices:
+	\begin{itemize}
+	\item Reduce security
+	\item Remove important properties, e.g. forward secrecy property
+	\item Can be very slow (\cipher{3DES}) and hence lead to computational DoS
+	\end{itemize}
+\end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -477,6 +466,17 @@ if (rc != 0) /* Verification error */
 \item Use elliptic curve cryptography (if possible)
 \item Be very careful when choosing entropy source: e.g. prefer \funcname{getentropy(2)} 
 call in OpenBSD to \texttt{/dev/random} especially with sandboxing or containers
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Performance: current progress}
+\begin{itemize}
+\item<1-> Experimental support of \cipher{AES-GCM} in OpenBSD and FreeBSD\footnote{by John-Mark 
+Gurney} kernels, problems with additional registers saving on context switch
+\item<2-> Support of \cipher{ChaCha20-Poly1305} in libressl, boringssl and libgrypt (and 
+gnutls)
+\item<3-> Deprecating of \cipher{RC4} in OpenBSD (proposed in FreeBSD and NetBSD as well) and switching to ChaCha20 for \funcname{arc4random}
 \end{itemize}
 \end{frame}
 
